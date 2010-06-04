@@ -1,5 +1,4 @@
 
-config.gem "thoughtbot-shoulda", :lib => "shoulda", :source => "http://gems.github.com"
 
 # Settings specified here will take precedence over those in config/environment.rb
 
@@ -29,5 +28,5 @@ config.action_mailer.delivery_method = :test
 # ref: http://floehopper.lighthouseapp.com/projects/22289-mocha/tickets/50
 config.gem 'test-unit',               :lib => 'test/unit'
 config.gem 'mocha'
-config.gem 'thoughtbot-shoulda',      :lib => 'shoulda',      :source => "http://gems.github.com"
+config.gem 'shoulda', :version => '2.10.3'
 #config.gem "thoughtbot-factory_girl", :lib => "factory_girl", :source => "http://gems.github.com"

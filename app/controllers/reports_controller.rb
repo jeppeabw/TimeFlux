@@ -36,20 +36,24 @@ class ReportsController < ApplicationController
   end
 
   def billing
-    setup_calender
-    params[:letter] ||= "A"
 
-    billable_customers = Customer.billable(true).to_a
-    @letters, @other = extract_customers_by_letter( billable_customers, @day )
+    @billing_report = BillingReport.new
+    @billing_report.show(params)
 
-    @customers = case params[:letter]
-    when '*' then 
-      Customer.billable(true).paginate :page => params[:page] || 1, :per_page => 100, :order => 'name'
-    when '#' then
-      @other.paginate :page => params[:page] || 1, :per_page => 25, :order => 'name'
-    else
-      Customer.billable(true).on_letter(params[:letter]).paginate :page => params[:page] || 1, :per_page => 25, :order => 'name'
-    end
+#    setup_calender
+#    params[:letter] ||= "A"
+#
+#    billable_customers = Customer.billable(true).to_a
+#    @letters, @other = extract_customers_by_letter( billable_customers, @day )
+#
+#    @customers = case params[:letter]
+#    when '*' then
+#      Customer.billable(true).paginate :page => params[:page] || 1, :per_page => 100, :order => 'name'
+#    when '#' then
+#      @other.paginate :page => params[:page] || 1, :per_page => 25, :order => 'name'
+#    else
+#      Customer.billable(true).on_letter(params[:letter]).paginate :page => params[:page] || 1, :per_page => 25, :order => 'name'
+#    end
 
   end
 

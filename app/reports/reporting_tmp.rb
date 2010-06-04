@@ -1,8 +1,12 @@
-module Reporting
+# To change this template, choose Tools | Templates
+# and open the template in the editor.
+
+module ReportingTmp
+
 
   private
 
-  def setup_calender(params)
+  def setup_calender
     if params[:calender]
       year = params[:calender]["date(1i)"].to_i
       month = params[:calender]["date(2i)"].to_i
@@ -35,7 +39,7 @@ module Reporting
     Kernel.const_get(symbol.to_s.camelcase).find(params[symbol])  if params[symbol] && params[symbol] != ""
   end
 
-  # Sets prawn arguments, and disables cache for explorer (prior to v. 6.0) 
+  # Sets prawn arguments, and disables cache for explorer (prior to v. 6.0)
   # so that it too can download pdf documents
   def initialize_pdf_download(filename)
     prawnto :prawn => prawn_params, :filename=> filename
@@ -86,5 +90,5 @@ module Reporting
       :bottom_margin => 24 }
   end
 
-  
+    
 end
