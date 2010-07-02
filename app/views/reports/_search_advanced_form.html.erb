@@ -5,8 +5,8 @@
     <table style="width:100%;vertical-align:top;">
       <tr>
         <th>Period</th><th>Options</th><th>Formatting</th>
-        <% days_in_from_month = @from_day.at_end_of_month.mday %>
-        <% days_in_to_month = @to_day.at_end_of_month.mday %>
+        <% days_in_from_month = search_view.from_day.at_end_of_month.mday %>
+        <% days_in_to_month = search_view.to_day.at_end_of_month.mday %>
       </tr>
       <tr>
 
@@ -14,28 +14,28 @@
           <table>
             <tr>
               <td><%= label_tag "from" %></td>
-              <td><%= select_tag "from_year", options_for_select(years, @from_day.year) %></td>
+              <td><%= select_tag "from_year", options_for_select(years, search_view.from_day_year) %></td>
             </tr>
             <tr>
               <td></td>
-              <td><%= select_tag "from_month", options_from_collection_for_select( months, 'first', 'last', @from_day.month ) %></td>
+              <td><%= select_tag "from_month", options_from_collection_for_select( months, 'first', 'last', search_view.from_day_month ) %></td>
             </tr>
             <tr>
               <td></td>
-              <td><%= select_tag "from_day", options_for_select((1..days_in_from_month), @from_day.mday) %></td>
+              <td><%= select_tag "from_day", options_for_select((1..days_in_from_month), search_view.from_day.mday) %></td>
             </tr>
             <tr> <td></td></tr>
             <tr>
               <td><%= label_tag "to" %></td>
-              <td><%= select_tag "to_year", options_for_select(years, @to_day.year) %></td>
+              <td><%= select_tag "to_year", options_for_select(years, search_view.to_day_year) %></td>
             </tr>
             <tr>
               <td></td>
-              <td><%= select_tag "to_month", options_from_collection_for_select( months, 'first', 'last', @to_day.month  ) %></td>
+              <td><%= select_tag "to_month", options_from_collection_for_select( months, 'first', 'last', search_view.to_day_month  ) %></td>
             </tr>
             <tr>
               <td></td>
-              <td><%= select_tag "to_day", options_for_select((1..days_in_to_month), @to_day.mday ) %></td>
+              <td><%= select_tag "to_day", options_for_select((1..days_in_to_month), search_view.to_day.mday ) %></td>
             </tr>
           </table>
         </td>
@@ -44,22 +44,22 @@
           <table>
             <tr>
               <td><%= label_tag "status" %></td>
-              <td><%= select_tag "status", empty_option("All") +  options_for_select( [['Open',TimeEntry::OPEN],['Locked',TimeEntry::LOCKED],['Billed',TimeEntry::BILLED]], @status ) %></td>
+              <td><%= select_tag "status", empty_option("All") +  options_for_select( [['Open',TimeEntry::OPEN],['Locked',TimeEntry::LOCKED],['Billed',TimeEntry::BILLED]], search_view.status ) %></td>
             </tr>
             <tr>
               <td><%= label_tag "user" %></td>
-              <td><%= select_tag "user", empty_option("All") + options_from_collection_for_select( User.all.sort, :id, :fullname, params[:user].to_i ) %></td>
+              <td><%= select_tag "user", empty_option("All") + options_from_collection_for_select( User.all.sort, :id, :fullname, user_id ) %></td>
             </tr>
             <tr> <td></td></tr>
 
             <tr>
               <td><%= label_tag "customer"%></td>
-              <td><%= select_tag "customer", option("All", "*") + options_from_collection_for_select( Customer.all.sort, 'id', 'name', params[:customer].to_i  ) %></td>
+              <td><%= select_tag "customer", option("All", "*") + options_from_collection_for_select( Customer.all.sort, 'id', 'name', customer_id  ) %></td>
             </tr>
             <tr>
               <% if customer %>
                 <td><%= label_tag "project",'Project'%></td>
-                <td><%= select_tag "project", empty_option("All") + options_from_collection_for_select(customer.projects, :id, :name, @project.try("id")) %></td>
+                <td><%= select_tag "project", empty_option("All") + options_from_collection_for_select(customer.projects, :id, :name, search_view.project.try("id")) %></td>
               <% else %>
                 <td><%= label_tag "project",'Project', :class => 'disabled' %></td>
                 <td><%= select_tag "project", empty_option("-----------"), {:disabled => true} %></td>
@@ -70,12 +70,12 @@
 
             <tr>
               <td><%= label_tag "tag_type","Category"%></td>
-              <td><%= select_tag "tag_type", empty_option("All") + options_from_collection_for_select(TagType.all, :id, :name, params[:tag_type].to_i) %></td>
+              <td><%= select_tag "tag_type", empty_option("All") + options_from_collection_for_select(TagType.all, :id, :name, tag_type_id) %></td>
             </tr>
             <tr>
-              <% if tag_type %>
+              <% if search_view.tag_type %>
                 <td><%= label_tag "tag",'Tag'%></td>
-                <td><%= select_tag "tag", empty_option("All") + options_from_collection_for_select(tag_type.tags, :id, :name, params[:tag].to_i) %></td>
+                <td><%= select_tag "tag", empty_option("All") + options_from_collection_for_select(search_view.tag_type.tags, :id, :name, tag_id) %></td>
               <% else %>
                 <td><%= label_tag "tag","Tag", :class => 'disabled' %></td>
                 <td><%= select_tag "tag", empty_option("-----------"), {:disabled => true} %></td>
@@ -88,11 +88,7 @@
 
             <tr>
               <td><%= label_tag "group_by","Group by" %></td>
-              <td><%= select_tag "group_by", options_for_select( [['Consultant','user'],['Activity','activity'],['Date','date']], params[:group_by]) %></td>
-            </tr>
-            <tr>
-              <td><%= label_tag "remove_comments","Remove comments" %></td>
-              <td><%= check_box_tag "remove_comments", 1, params[:remove_comments], {:disabled => true} %></td>
+              <td><%= select_tag "group_by", options_for_select( [['Consultant','user'],['Activity','activity'],['Date','date']], group_by) %></td>
             </tr>
        </table></td>
 

@@ -1,14 +1,13 @@
+<% if @search_view.time_entries != nil %>
 
-<% if @time_entries != nil %>
+<% unless @search_view.time_entries.empty? %>
 
-<% unless @time_entries.empty? %>
+<p>Found <%=  @search_view.time_entries.size %> entries / <%= @search_view.time_entries.sum(&:hours) %> hours</p>
 
-<p>Found <%=  @time_entries.size %> entries / <%= @time_entries.sum(&:hours) %> hours</p>
-
-  <% user_entries = @time_entries.group_by(&@group_by) %>
+  <% user_entries = @search_view.time_entries.group_by(&@search_view.group_by) %>
   <% user_entries.each do |group, te| %>
     
-    <% group_header = case @group_by
+    <% group_header = case @search_view.group_by
         when :activity then group.customer_project_name
         when :user then group.name
         else group.to_s end %>
@@ -18,7 +17,7 @@
     <table width="100%" class="regular">
       <tr>
         <% columns = %w{Date User Activity Type Status };
-           columns.delete(@group_by.to_s.capitalize) %>
+           columns.delete(@search_view.group_by.to_s.capitalize) %>
         <% columns.each do |column| %>
           <th><%= column %></th>
         <% end %>
@@ -28,9 +27,9 @@
       </tr>
       <%te.each do |entry| %>
         <tr>
-          <% unless @group_by == :date %><td style="white-space:nowrap;"><%= entry.date -%></td><% end %>
-          <% unless @group_by == :user %><td style="white-space:nowrap;"><%= entry.user.name -%></td><% end %>
-          <% unless @group_by == :activity %><td style="white-space:nowrap;"><%= entry.activity.name -%></td><% end %>
+          <% unless @search_view.group_by == :date %><td style="white-space:nowrap;"><%= entry.date -%></td><% end %>
+          <% unless @search_view.group_by == :user %><td style="white-space:nowrap;"><%= entry.user.name -%></td><% end %>
+          <% unless @search_view.group_by == :activity %><td style="white-space:nowrap;"><%= entry.activity.name -%></td><% end %>
           <td style="white-space:nowrap;"><%= entry.hour_type.name -%></td>
           <td><%= entry.status_str -%></td>
           <td style="text-align:right"><%= entry.hours -%></td>

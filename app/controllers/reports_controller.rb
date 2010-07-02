@@ -8,78 +8,43 @@ class ReportsController < ApplicationController
   def index
   end
 
+  
   def user
-    setup_calender
-    @users = User.active.paginate :page => params[:page] || 1, :per_page => 30, :order => 'lastname'
-
-    first_day = @day.at_beginning_of_month
-    last_day = @day.at_end_of_month
-    first_week = [first_day,first_day.end_of_week]
-    last_week = [last_day.beginning_of_week,last_day]
-
-    date_iterator = first_day.end_of_week + 1 #monday in the second week of the month
-    middle_weeks = []
-    until date_iterator == last_day.beginning_of_week
-      middle_weeks << [date_iterator, date_iterator + 6]
-      date_iterator += 7
-    end
-
-    @weeks = [first_week] + middle_weeks + [last_week]
-
-    @expected = @weeks.collect do |from, to|
-      Holiday.expected_hours_between( from,to )
-    end
-
-    @totals = @weeks.collect do |day, to|
-      TimeEntry.between(day, to).sum(:hours)
-    end
+    @user_report = UserReport.new(params)
+    @user_report.show
   end
 
   def billing
-    setup_calender
-    params[:letter] ||= "A"
-
-    billable_customers = Customer.billable(true).to_a
-    @letters, @other = extract_customers_by_letter( billable_customers, @day )
-
-    @customers = case params[:letter]
-    when '*' then 
-      Customer.billable(true).paginate :page => params[:page] || 1, :per_page => 100, :order => 'name'
-    when '#' then
-      @other.paginate :page => params[:page] || 1, :per_page => 25, :order => 'name'
-    else
-      Customer.billable(true).on_letter(params[:letter]).paginate :page => params[:page] || 1, :per_page => 25, :order => 'name'
-    end
-
+    @billing_report = BillingReport.new(params)
+    @billing_report.show
   end
-
-
 
   # With the selected project this method will either mark entries as billed,
   # or display a pdf invoice depending on submit name.
   #
   def billing_action
-    setup_calender
+    @billing_report = BillingReport.new(params)
+    @billing_report.setup_calendar_for_billing
 
     if params[:project]
       project_keys = params[:project].keys
       @projects = project_keys.map{|key| Project.find(key.to_i)}
 
       if params[:report]
-        @from_day = @day
-        @to_day = @day.at_end_of_month
+        @from_day = @billing_report.day
+        @to_day = @billing_report.day.at_end_of_month
         initialize_pdf_download("#{t'invoice.filename'}.pdf")
         render :billing_report, :layout=>false
       else
         @projects.each do |p|
-          TimeEntry.mark_as_billed( TimeEntry.for_project(p).between(@day, @day.at_end_of_month) , true)
+          TimeEntry.mark_as_billed( TimeEntry.for_project(p).between(@billing_report.day, @billing_report.day.at_end_of_month) , true)
         end
         redirect_to params.merge( :action => 'billing', :format => 'html' )
       end
 
     else
       flash[:error] = "No projects selected"
-      redirect_to :action => 'billing', :month => @day.month, :year => @day.year
+      redirect_to :action => 'billing', :month => @billing_report.day.month, :year => @billing_report.day.year
     end
   end
 
@@ -91,22 +56,8 @@ class ReportsController < ApplicationController
   end
 
   def customer
-    setup_calender
-    parse_search_params
-    @billable_project_hours = project_hours_for_customers(Customer.billable(true))
-    @internal_project_hours = project_hours_for_customers(Customer.billable(false))
-  end
-
-  def project
-    setup_calender
-    parse_search_params
-    @user_activity_hours = []
-    @project.activities.each do |activity|
-      User.all.each do |user|
-        hours = TimeEntry.between(@from_day, @to_day).for_user(user).for_activity(activity).sum(:hours)
-        @user_activity_hours << [user,activity, hours] if hours > 0
-      end
-    end
+    @customer_report = CustomerReport.new(params)
+    @customer_report.show
   end
 
   def update_project_content
@@ -116,34 +67,53 @@ class ReportsController < ApplicationController
     end
   end
 
+  def project
+    @customer_report = CustomerReport.new(params)
+    @customer_report.show_projects
+  end
+
   def search
-    setup_calender
-    parse_search_params
-    create_search_report
+    @search_view = SearchView.new(params)
+    @search_view.show
     
+    @user_id = params[:user].to_i
+    @tag_type_id = params[:tag_type].to_i
+    @tag_id = params[:tag].to_i
+    @group_by = params[:group_by]
+
     respond_to do |format|
       format.html { }
       format.pdf  do
-        @parameters = []
-        @parameters << [t('common.period'),"#{@from_day} to #{@to_day}"]
-        @parameters << [t('common.person'),@user.fullname] if @user
-        @parameters << [t('common.billable'),@billed ? "Ja" : "Nei"] if @billed
-        @parameters << [t('common.customer'),@customer.name] if @customer
-        @parameters << [t('common.project'),@project.name]  if @project
-        @parameters << [t('common.category'),@tag_type.name] if @tag_type
-        @parameters << [t('common.tag'),@tag.name] if @tag
+      @parameters = []
+      @parameters << [t('common.period'),"#{@search_view.from_day} to #{@search_view.to_day}"]
+      @parameters << [t('common.person'),@search_view.user.fullname] if @search_view.user
+      @parameters << [t('common.billable'),@billed ? "Ja" : "Nei"] if @billed
+      @parameters << [t('common.customer'),@search_view.customer.name] if @search_view.customer
+      @parameters << [t('common.project'),@search_view.project.name]  if @search_view.project
+      @parameters << [t('common.category'),@search_view.tag_type.name] if @search_view.tag_type
+      @parameters << [t('common.tag'),@search_view.tag.name] if @search_view.tag
 
-        initialize_pdf_download("search_report.pdf")
-        render :search, :layout=>false
+      initialize_pdf_download("search_report.pdf")
+
+      render :search, :layout=>false
       end
     end
   end
 
   def update_search_advanced_form
     if request.xhr?
-      setup_calender
-      parse_search_params
-      render :partial => 'search_advanced_form', :locals => { :params => params, :tag_type => @tag_type, :customer => @customer, :years => @years, :months => @months }
+      @search_view = SearchView.new(params)
+      @search_view.prepare_update
+
+      @user_id = params[:user].to_i
+      @customer_id = params[:customer].to_i
+      @tag_type_id = params[:tag_type].to_i
+      @tag_id = params[:tag].to_i
+      @group_by = params[:group_by]
+            
+      render :partial => 'search_advanced_form', :locals => 
+        { :user_id => @user_id, :customer_id => @customer_id, :search_view => @search_view, :years => @search_view.years,
+        :months => @search_view.months, :customer => @search_view.customer, :tag_type_id => @tag_type_id, :tag_id => @tag_id, :group_by => @group_by }
     end
   end
 
@@ -156,50 +126,10 @@ class ReportsController < ApplicationController
 
   def mark_time_entries
     if params[:method] == 'post'
-      setup_calender
-      parse_search_params
-      create_search_report
-
-      value = (params[:value] && params[:value] == "true")
-
-      if params[:mark_as] == 'billed'
-        TimeEntry.mark_as_billed(@time_entries, value)
-      elsif params[:mark_as] == 'locked'
-        TimeEntry.mark_as_locked(@time_entries, value)
-      end
+      @search_view = SearchView.new(params)
+      @search_view.mark_time_entries
     end
     redirect_to( {:action => 'search'}.merge(params) )
-  end
-
-  private
-
-  def parse_search_params
-    params[:month] ||= @day.month
-
-    if params[:from_day] && params[:from_day] != ""
-      @from_day = set_date(params[:from_year].to_i, params[:from_month].to_i, params[:from_day].to_i)
-      @to_day = set_date(params[:to_year].to_i, params[:to_month].to_i, params[:to_day].to_i)
-    else
-      @from_day = @day
-      @to_day = @day.at_end_of_month
-    end
-
-    unless params[:customer] == "*"
-      @customer = param_instance(:customer)
-    end
-    @project = param_instance(:project)
-    @user = param_instance(:user)
-    @tag_type = param_instance(:tag_type)
-    @tag = param_instance(:tag)
-    @status = params[:status].to_i if params[:status] && params[:status] != ""
-  end
-
-  def create_search_report
-    if params[:customer] && params[:customer] != ""
-      @time_entries = TimeEntry.search(@from_day,@to_day,@customer,@project,@tag,@tag_type,@user,@status).sort
-    end
-    @group_by = params[:group_by].to_sym if params[:group_by] && params[:group_by] != ""
-    @group_by ||= :user
   end
   
 end

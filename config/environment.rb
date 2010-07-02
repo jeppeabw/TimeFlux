@@ -16,6 +16,8 @@ Rails::Initializer.run do |config|
   config.gem 'will_paginate', :version => '2.3.14'
   config.gem 'ruby-net-ldap', :lib => 'net/ldap', :version => '0.0.4'
   config.gem 'prawn',         :version => '0.8.4'
+
+  config.load_paths += %W( #{RAILS_ROOT}/app/reports )
   
   config.time_zone = 'UTC'
 

@@ -1,5 +1,5 @@
-<% expected_days = Holiday.expected_days_between(@day,@day.at_end_of_month) -%>
-<% expected_hours = Holiday.expected_hours_between(@day,@day.at_end_of_month) -%>
+<% expected_days = Holiday.expected_days_between(@user_report.day,@user_report.at_end_of_month) -%>
+<% expected_hours = Holiday.expected_hours_between(@user_report.day,@user_report.at_end_of_month) -%>
 
 <h1>User Report</h1>
 
@@ -12,8 +12,8 @@
   <div>
     <table>
       <tr>
-        <td><%= select_tag "month", options_from_collection_for_select( @months, 'first', 'last', params[:month] ? params[:month].to_i : @day.month  ) %></td>
-        <td><%= select_tag "year", options_for_select(@years, params[:year].to_i) %></td>
+        <td><%= select_tag "month", options_from_collection_for_select( @user_report.months, 'first', 'last', params[:month] ? params[:month].to_i : @user_report.month  ) %></td>
+        <td><%= select_tag "year", options_for_select(@user_report.years, params[:year].to_i) %></td>
       <td><%= submit_tag "View" %></td>
     </table>
   </div>
@@ -23,31 +23,31 @@
   <table class="regular" style="text-align:right">
     <tr>
       <th></th>
-      <% @weeks.each do |date| %>
+      <% @user_report.weeks.each do |date| %>
       <th>Week <%= date[0].cweek %> </th>
       <% end %>
     </tr>
 
     <tr class="grayed">
       <td class="underline overline" style="text-align:left">Normal working hours</td>
-      <% @expected.each do |hours| %>
+      <% @user_report.  expected.each do |hours| %>
       <td class="underline overline"><%= hours %> </td>
       <% end %>
     </tr>
 
     <tr><td colspan="99"></td></tr>
 
-    <% @users.each do |user| %>
+    <% @user_report.users.each do |user| %>
       <tr>
-        <td style="text-align:left"><span class="<%= user.status_for_month(@day, expected_days, expected_hours)%>">
-          <%= link_to h(user.name), user_month_review_path( user, {:id => :calendar}.merge( date_to_url(@day) ) ) %>
+        <td style="text-align:left"><span class="<%= user.status_for_month(@user_report.day, expected_days, expected_hours)%>">
+          <%= link_to h(user.name), user_month_review_path( user, {:id => :calendar}.merge( date_to_url(@user_report.day) ) ) %>
         </span></td>
-        <% @weeks.each_with_index do |range, index| %>
+        <% @user_report.weeks.each_with_index do |range, index| %>
           <% hours = TimeEntry.for_user(user).between(range[0], range[1]).sum(:hours) %>
           <% color_code = case hours
               when 0 : "grayed"
-              when 0..(@expected[index] -1): "red"
-              when (@expected[index] - 1)..(@expected[index] * 1.3): "black"
+              when 0..(@user_report.expected[index] -1): "red"
+              when (@user_report.expected[index] - 1)..(@user_report.expected[index] * 1.3): "black"
               else "high"
           end %>
 
@@ -59,14 +59,14 @@
 
     <tr>
       <th class="overline">Total</th>
-      <% @totals.each do |total| %>
+      <% @user_report.totals.each do |total| %>
       <th class="overline"><%= total %></th>
       <% end %>
     </tr>
     
   </table>
 
-  <%= will_paginate @users %>
+  <%= will_paginate @user_report.users %>
   <br/>
 
 <%#= render :partial => 'download', :locals => { :params => params, :action => 'user' } -%>

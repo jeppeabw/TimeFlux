@@ -1,16 +1,10 @@
 
-<br />
 
 <table width="100%">
   <tr>
     <td width="30%">
       <h1>General Reports</h1>
-      <ul>
-        <li><h3><%=  link_to "Billing", :action => 'billing' %></h3></li>
-        <li><h3><%=  link_to "Customers", :action => 'customer' %></h3></li>
-        <li><h3><%=  link_to "User Hours", :action => 'user' %></h3></li>
-        <li><h3><%=  link_to "Search", :action => 'search' %></h3></li>
-      </ul>
+      <%= render :partial => 'sub_menu' -%>
     </td>
     <td>
       <h1>Assigned Projects</h1>

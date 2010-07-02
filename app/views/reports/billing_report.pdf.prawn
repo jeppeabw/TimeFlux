@@ -16,7 +16,7 @@ pdf.bounding_box [0, pdf.bounds.height - 80], :height =>  pdf.bounds.height - 12
     pdf.font "Helvetica" do
       [ "#{t('common.customer')}: #{project.customer.name}",
         "#{t('common.project')}: #{project.name}",
-        "#{t('common.period')}: #{@day} - #{@day.at_end_of_month}"].each do |text_line|
+        "#{t('common.period')}: #{@billing_report.day} - #{@billing_report.day.at_end_of_month}"].each do |text_line|
 
         pdf.pad_bottom(3) do
           pdf.text text_line, :size => 11
@@ -67,6 +67,6 @@ pdf.repeat :all do
   pdf.font "Helvetica" do
     pdf.stroke_horizontal_rule
     pdf.move_down(10)
-    pdf.text "Conduct 2009", :align => :center, :size => 12
+    pdf.text "Conduct 2010", :align => :center, :size => 12
   end
 end

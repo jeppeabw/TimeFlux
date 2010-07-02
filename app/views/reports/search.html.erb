@@ -7,12 +7,14 @@
 
 <div id="search_filter">
   <% unless params[:type] == "advanced" %>
-    <%= render :partial => 'search_form', :locals => { :params => params, :years => @years, :months => @months } -%>
+    <%= render :partial => 'search_form', :locals => { :params => params, :years => @search_view.years, :months => @search_view.months } -%>
     <%= observe_form 'search_form',
       :url => {:action => 'update_search_content'},
       :update => 'search_content' %>
   <% else %>
-    <%= render :partial => 'search_advanced_form', :locals => { :params => params, :tag_type => @tag_type, :customer => @customer, :years => @years, :months => @months } -%>
+    <%= render :partial => 'search_advanced_form', :locals => { :params => params, :search_view => @search_view, :tag_type => @search_view.tag_type,
+      :customer => @search_view.customer, :years => @search_view.years, :months => @search_view.months, :user_id => @user_id, :customer_id => @customer_id, 
+      :tag_type_id => @tag_type_id, :tag_id => @tag_id, :group_by => @group_by } -%>
   <% end %>
 </div>
 

@@ -10,8 +10,8 @@
   <div>
     <table>
       <tr>
-        <td><%= select_tag "month", options_from_collection_for_select( @months, 'first', 'last', params[:month] ? params[:month].to_i : @day.month  ) %></td>
-        <td><%= select_tag "year", options_for_select(@years, params[:year].to_i) %></td>
+        <td><%= select_tag "month", options_from_collection_for_select( @customer_report.months, 'first', 'last', params[:month] ? params[:month].to_i : @customer_report.day.month  ) %></td>
+        <td><%= select_tag "year", options_for_select(@customer_report.years, params[:year].to_i) %></td>
       <td><%= submit_tag "View" %></td>
     </table>
   </div>
@@ -21,7 +21,7 @@
 <h3>Billable Customers</h3>
 
 <div id="customer_content">
-  <%= render :partial => 'customer_content', :locals => { :project_hours => @billable_project_hours} %>
+  <%= render :partial => 'customer_content', :locals => { :project_hours => @customer_report.billable_project_hours} %>
 </div>
 
 
@@ -29,5 +29,5 @@
 <h3>Not Billable</h3>
 
 <div id="internal_content">
-  <%= render :partial => 'customer_content', :locals => { :project_hours => @internal_project_hours} %>
+  <%= render :partial => 'customer_content', :locals => { :project_hours => @customer_report.internal_project_hours} %>
 </div>

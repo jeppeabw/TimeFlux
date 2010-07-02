@@ -1,23 +1,25 @@
 module Reporting
 
-  private
+  #private
 
-  def setup_calender
-    if params[:calender]
-      year = params[:calender]["date(1i)"].to_i
-      month = params[:calender]["date(2i)"].to_i
+
+  def setup_calendar
+    if @params[:calender]
+      year = @params[:calender]["date(1i)"].to_i
+      month = @params[:calender]["date(2i)"].to_i
     else
-      year = params[:year].to_i if params[:year] && params[:year] != ""
-      month = params[:month].to_i if params[:month] && params[:month] != ""
+      year = @params[:year].to_i if @params[:year] && @params[:year] != ""
+      month = @params[:month].to_i if @params[:month] && @params[:month] != ""
     end
     relevant_date = Date.today - 7
     @day = Date.new(year ? year : relevant_date.year, month ? month : relevant_date.month, 1)
 
     @years = (2007..Date.today.year).to_a.reverse
     @months = []
-    @month_names = %w{ January Febrary March April May June July August September October November December}
+    @month_names = %w{ January February March April May June July August September October November December}
     @month_names.each_with_index { |name, i| @months << [ i+1, name ] }
   end
+
 
   # Sets the date to the last in month if the supplied date is higher.
   # Example 2009,2,31 returns Date.civil(2009,2,28)
@@ -32,7 +34,7 @@ module Reporting
   # Example for symbol :user -> returns User.find(params[:user]) or nil if param or user does not exsist
   #
   def param_instance(symbol)
-    Kernel.const_get(symbol.to_s.camelcase).find(params[symbol])  if params[symbol] && params[symbol] != ""
+    Kernel.const_get(symbol.to_s.camelcase).find(@params[symbol])  if @params[symbol] && @params[symbol] != ""
   end
 
   # Sets prawn arguments, and disables cache for explorer (prior to v. 6.0) 
@@ -86,5 +88,27 @@ module Reporting
       :bottom_margin => 24 }
   end
 
-  
+
+  def parse_search_params
+    @params[:month] ||= @day.month
+
+    if @params[:from_day] && @params[:from_day] != ""
+      @from_day = set_date(@params[:from_year].to_i, @params[:from_month].to_i, @params[:from_day].to_i)
+      @to_day = set_date(@params[:to_year].to_i, @params[:to_month].to_i, @params[:to_day].to_i)
+    else
+      @from_day = @day
+      @to_day = @day.at_end_of_month
+    end
+
+    unless @params[:customer] == "*"
+      @customer = param_instance(:customer)
+    end
+    @project = param_instance(:project)
+    @user = param_instance(:user)
+    @tag_type = param_instance(:tag_type)
+    @tag = param_instance(:tag)
+    @status = @params[:status].to_i if @params[:status] && @params[:status] != ""
+  end
+
+
 end
