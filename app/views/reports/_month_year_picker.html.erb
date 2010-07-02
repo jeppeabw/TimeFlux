@@ -2,8 +2,8 @@
   <div>
     <table>
       <tr>
-        <td><%= select_tag "month", options_from_collection_for_select( months, 'first', 'last', params[:month] ? params[:month].to_i : day.month  ) %></td>
-        <td><%= select_tag "year", options_for_select(years, params[:year].to_i) %></td>
+        <td><%= select_tag "month", options_from_collection_for_select( @customer_report.months, 'first', 'last', params[:month] ? params[:month].to_i : @customer_report.month  ) %></td>
+        <td><%= select_tag "year", options_for_select(@customer_report.years, params[:year].to_i) %></td>
       <td><noscript><%= submit_tag "View" %></noscript></td>
     </table>
   </div>

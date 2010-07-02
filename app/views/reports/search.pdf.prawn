@@ -21,12 +21,12 @@ pdf.bounding_box [0, pdf.bounds.height - 80], :height =>  pdf.bounds.height - 12
     pdf.move_down(11)
   end
 
-  if @time_entries.empty?
+  if @search_view.time_entries.empty?
     pdf.move_down(40)
     pdf.text t('search.empty_result')
   else
   
-    user_entries = @time_entries.group_by(&@group_by)
+    user_entries = @search_view.time_entries.group_by(&@search_view.group_by)
     user_entries.each do |group, te|
 
       entry_data = te.map do |t|
@@ -43,7 +43,7 @@ pdf.bounding_box [0, pdf.bounds.height - 80], :height =>  pdf.bounds.height - 12
 
       pdf.move_down(30)
       pdf.font "Helvetica", :style => :bold do
-        pdf.text case @group_by
+        pdf.text case @search_view.group_by
         when :activity then group.customer_project_name
         when :user then group.name
         else group.to_s end
@@ -72,6 +72,6 @@ pdf.repeat :all, :at => [pdf.bounds.left, pdf.bounds.bottom + 25] do
   pdf.font "Helvetica" do
     pdf.stroke_horizontal_rule
     pdf.move_down(10)
-    pdf.text "conduct 2009", :align => :center, :size => 12
+    pdf.text "conduct 2010", :align => :center, :size => 12
   end
 end
